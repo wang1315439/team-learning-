@@ -1,0 +1,150 @@
+"""
+1. 利用动态数组解决数据存放问题
+
+编写一段代码，要求输入一个整数N，用动态数组A来存放2~N之间所有5或7的倍数，输出该数组。
+
+示例：
+
+输入：
+N = 100 
+
+输出：
+5 7 10 14 15 20 21 25 28 30 35 40 42 45 49 50 55 56 60 63 65 70 75 77 80 84 85 90 91 95 98 100
+"""
+package Array;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class task01_0 {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int N = sc.nextInt();
+        List<Integer> ll = new ArrayList<>();
+        for (int i=2;i<=N;i++){
+            if(i%5==0||i%7==0){
+                ll.add(i);
+            }
+        }
+        ll.sort((o1,o2)->Integer.compare(o1,02));
+        for(int i=0;i<ll.size();i++){
+            if (i==ll.size()-1)
+                System.out.println(ll.get(i));
+            else
+                System.out.print(ll.get(i)+" ");
+        }
+    }
+}
+
+"""
+2. 托普利茨矩阵问题
+
+如果一个矩阵的每一方向由左上到右下的对角线上具有相同元素，那么这个矩阵是托普利茨矩阵。
+
+给定一个M x N的矩阵，当且仅当它是托普利茨矩阵时返回True。
+
+示例：
+
+输入:
+matrix = [
+  [1,2,3,4],
+  [5,1,2,3],
+  [9,5,1,2]
+]
+输出: True
+"""
+class Solution:
+    def isToeplitzMatrix(self, matrix: List[List[int]]) -> bool:
+        groups = {}
+        for r, row in enumerate(matrix):
+            for c, val in enumerate(row):
+                if r-c not in groups:
+                    groups[r-c] = val
+                elif groups[r-c] != val:
+                    return False
+        return True
+
+# 思路：首先要想明白的是怎么判断 (r1, c1 和 (r2, c2) 这两个点属于一条对角线。通过观察可以发现，
+#在满足 r1 - c1 == r2 - c2 的情况下，这两个点属于同一条对角线。
+
+# 在上面的问题搞清楚的情况下，很容易就可以想到：让 groups[r-c] 存储每条对角线上遇到的第一个元素的值，
+#如果之后遇到的任何一个值不等于之前存储的值，那么这个矩阵就不是托普利茨矩阵，否则就是。
+
+"""
+3. 三数之和
+
+https://leetcode-cn.com/problems/3sum/
+
+给定一个包含 n 个整数的数组nums，判断nums中是否存在三个元素a，b，c，使得a + b + c = 0？找出所有满足条件且不重复的三元组。
+
+注意：答案中不可以包含重复的三元组。
+
+示例：
+
+给定数组 nums = [-1, 0, 1, 2, -1, -4]，
+
+满足要求的三元组集合为：
+[
+  [-1, 0, 1],
+  [-1, -1, 2]
+]
+"""
+#此暴力解法超时O（n^3）
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        # nums.sort()
+        # le = len(nums)
+        # lis = []
+        # for i in range(0,le):
+        #     if nums[i] > 0:
+        #         break
+        #     if i > 0 and nums[i] == nums[i-1]:
+        #         continue
+        #     for j in range(i+1,le):
+        #         # if nums[j]==nums[j-1]:
+        #         #     continue
+        #         for k in range(j+1,le):
+        #             # if nums[k]==nums[k-1]:
+        #             #     continue
+        #             if nums[i]+nums[j]+nums[k] == 0 and [nums[i],nums[j],nums[k]] not in lis :
+        #                 lis.append([nums[i],nums[j],nums[k]]) 
+        # return lis
+
+    #双指针解法时间复杂度O(n^2)
+    # 先排序，再双层遍历，外层0到n遍历，内层用双指针，一个从前向后，一个从后向前
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        n=len(nums)
+        res=[]
+        if(not nums or n<3):
+            return []
+        nums.sort()
+        res=[]
+        for i in range(n):
+            if(nums[i]>0):
+                return res
+            if(i>0 and nums[i]==nums[i-1]):
+                continue
+            L=i+1
+            R=n-1
+            while(L<R):
+                if(nums[i]+nums[L]+nums[R]==0):
+                    res.append([nums[i],nums[L],nums[R]])
+                    while(L<R and nums[L]==nums[L+1]):
+                        L=L+1
+                    while(L<R and nums[R]==nums[R-1]):
+                        R=R-1
+                    L=L+1
+                    R=R-1
+                elif(nums[i]+nums[L]+nums[R]>0):
+                    # while(L<R and nums[R]==nums[R-1]):
+                    #     R=R-1
+                    R=R-1
+                else:
+                    # while(L<R and nums[L]==nums[L+1]):
+                    #     L=L+1
+                    L=L+1
+        return res
+        
+        
