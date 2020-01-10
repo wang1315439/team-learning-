@@ -1,0 +1,101 @@
+class Stack(object):
+    def __init__(self):
+        self.stack = []
+
+    def push(self, value):
+        self.stack.append(value)
+
+    def pop(self):
+        if self.stack:
+            self.stack.pop()
+        else:
+            raise LookupError("stack is empty")
+
+    def isEmpty(self):
+        return len(self.stack)==0
+
+    def isNotEmpty(self):
+        return len(self.stack)>0
+
+    def top(self):
+        return self.stack[-1]
+
+
+# 遍历查找三个缓冲轨道的顶部元素，与当前最小值比较，最终返回最小值和最小值车厢所在的缓冲轨道的Id
+def OutFromStack(stacks, k, n):
+    global minNumInStack, minStackId
+
+    c = stacks[minStackId].top()
+    stacks[minStackId].pop()
+    print("output the ", c, "from track", minStackId+1)
+
+    # 重制，找到当前最小的元素
+    minNumInStack = n + 1
+    for i in range(k):
+        if stacks[i].isNotEmpty() and stacks[i].top() < minNumInStack:
+            minNumInStack = stacks[i].top()
+            minStackId = i
+
+
+# 扫描到当前入轨车厢，但是当前入轨车厢不能直接被输出，需要将其放入缓冲轨道中
+def putIn(stacks, num, k, n):
+    global minNumInStack, minStackId
+    targetTop = n + 1
+    targetId = k
+    for i in range(k):
+        if not stacks[i].isEmpty():
+            x = stacks[i].top()
+            if x > num and x < targetTop:
+                targetTop = x
+                targetId = i
+        else:
+            if targetId == k:
+                targetId = i
+
+    if targetId == k:
+        return False
+
+    stacks[targetId].push(num)
+    print("put the", num, " into the", targetId+1, "th track")
+
+    if num < minNumInStack:
+        minNumInStack = num
+        minStackId = targetId
+
+    return True
+
+
+if __name__ == "__main__":
+    k = 3
+    arr = list(map(int, input().split()))
+
+    # 构建3个缓冲轨道
+    stacks = []
+    for i in range(k):
+        stack = Stack()
+        stacks.append(stack)
+
+    nowout = 1
+
+    # 三个缓冲轨道中，编号最小的车厢
+    minNumInStack = max(arr) + 1
+    # 编号最小的车厢所在的轨道id
+    minStackId = k
+
+    for i in range(1,len(arr)+1):
+        if arr[-i] == nowout:
+            print("output the ", arr[-i], "directly")
+            nowout += 1
+            # 若当前输出完成后，下一个应该被输出的正好此刻在三个缓冲轨道中
+            while nowout == minNumInStack:
+                OutFromStack(stacks, k, len(arr))
+                nowout += 1
+                if nowout == len(arr) + 1:
+                    print("work done")
+                    break
+        else:
+            if not putIn(stacks, arr[-i], k, len(arr)):
+                print("Fail to arrange the carrages")
+                break
+            
+            
