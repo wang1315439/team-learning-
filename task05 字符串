@@ -146,6 +146,31 @@ https://leetcode-cn.com/problems/replace-the-substring-for-balanced-string/
 输出：3
 解释：我们可以替换后 3 个 'Q'，使 s = "QWER"。
 
+"""
+分析：思路：
+1、统计字符个数
+2、只考虑大于n // 4的字符，目标找到最短的子串将这些多的字符替换掉。
+3、窗口中s[l,r]就是子串candidate:
+1）如果子串里包含了足够多要替换的字符，则l += 1， 缩小考察范围；
+2）如果子串里需要换掉的字符不够，则r += 1，考察更多的字符；
+举个栗子：
+‘WQWRQQQW’
+1、统计字典为counter = {W:3,Q:4,R:1}
+2、只考虑出现次数大于 n // 4 = 2的字母：counter = {W:3,Q:4}
+3、我们的目标是把字符串中多余的字母替换掉，即使得 counter_balanced = {W:2,Q:2,E:2,R:2}
+4、开始时 l = r = 0，此时s[l,r] = 'W',那么此子串不足以将W和Q替换完，所以我们继续考察后面的字符串，r += 1
+5、到了r = 4时，此时s[l,r] = 'WQWRQ'，那么可替换掉的W有两个，Q有两个，对比counter_balanced和counter
+我们可以知道，其实我们只需要换掉一个W和两个Q。此时我们可以考虑缩小考察范围，以获得最小的子串，l += 1
+6、直到l = 1时，此时s[l,r] = 'QWRQ'，我们就可以更新最小子串的长度。
+7、当l移动到一定程度的时候，子串里的字母又不够替换了，此时我们再移动r。长此以往，就能得到最短替换子串了。
+
+作者：neck199531
+链接：https://leetcode-cn.com/problems/replace-the-substring-for-balanced-string/solution/python3-hua-dong-chuang-kou-on-by-neck199531/
+来源：力扣（LeetCode）
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+"""
+
 class Solution:
     def balancedString(self, s: str) -> int:
         n = len(s)
