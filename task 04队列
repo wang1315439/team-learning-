@@ -1,0 +1,140 @@
+目前，在以银行营业大厅为代表的窗口行业中大量使用排队（叫号）系统，该系统完全模拟了人群排队全过程，通过取票进队、排队等待、叫号服务等功能，代替了人们站队的辛苦。
+
+排队叫号软件的具体操作流程为：
+
+顾客取服务序号
+当顾客抵达服务大厅时，前往放置在入口处旁的取号机，并按一下其上的相应服务按钮，取号机会自动打印出一张服务单。单上显示服务号及该服务号前面正在等待服务的人数。
+
+服务员工呼叫顾客
+服务员工只需按一下其柜台上呼叫器的相应按钮，则顾客的服务号就会按顺序的显示在显示屏上，并发出“叮咚”和相关语音信息，提示顾客前往该窗口办事。当一位顾客办事完毕后，柜台服务员工只需按呼叫器相应键，即可自动呼叫下一位顾客。
+
+编写程序模拟上面的工作过程，主要要求如下：
+
+程序运行后，当看到“请点击触摸屏获取号码：”的提示时，只要按回车键，即可显示“您的号码是：XXX，您前面有YYY位”的提示，其中XXX是所获得的服务号码，YYY是在XXX之前来到的正在等待服务的人数。
+用多线程技术模拟服务窗口（可模拟多个），具有服务员呼叫顾客的行为，假设每个顾客服务的时间是10000ms，时间到后，显示“请XXX号到ZZZ号窗口！”的提示。其中ZZZ是即将为客户服务的窗口号。
+
+# coding=utf-8
+
+import time
+import threading
+
+
+class Node():
+    def __init__(self, x):
+        self.data = x
+        self.next = None
+
+
+class LinkedQueue():
+    def __init__(self):
+        self._head = None
+        self._tail = None
+
+    def is_empty(self):
+        if self._head == self._tail:
+            return True
+        else:
+            return False
+
+    # 入队
+    def enqueue(self, val):
+        newNode = Node(val)
+        # 如果链表队列为空
+        if self._tail == None:
+            self._head = newNode
+        else:
+            self._tail.next = newNode
+        self._tail = newNode
+
+    # 出队
+    def dequeue(self):
+        # 如果队列为空
+        if self._head == self._tail:
+            return None
+        else:
+            node = self._head
+            self._head = self._head.next
+            return node.data
+
+    def __repr__(self):
+        # 队列为空
+        if self._head == self._tail:
+            return '空'
+        else:
+            result = []
+            cur = self._head
+            while cur != None:
+                result.append(cur.data)
+                cur = cur.next
+            return '->'.join(str(x) for x in result)
+
+
+class LinkBankQueue(LinkedQueue):
+    def __init__(self):
+        LinkedQueue.__init__(self)
+        self.callNumber = 0
+
+    def getCallNumber(self):
+        if self.is_empty() and self.callNumber == 0:
+            self.callNumber = 1
+        else:
+            self.callNumber += 1
+        return self.callNumber
+
+    def getLength(self):
+        if self.is_empty():
+            return 0
+        else:
+            cur = self._head
+            len = 1
+            while cur != self._tail:
+                cur = cur.next
+                len += 1
+            return len
+
+
+# 服务器
+class ServiceWindow(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.bankQueue = None
+        self.lock = threading.Lock()
+
+    def service(self):
+        self.lock.acquire()
+        while True:
+            time.sleep(20)
+            try:
+                if not self.bankQueue.is_empty():
+                    print('请 %d 号到 %s 号窗口' % (self.bankQueue._head.data, threading.current_thread().name))
+                    self.bankQueue.dequeue()
+                    # time.sleep(10)
+                else:
+                    print('队列为空哦')
+            finally:
+                self.lock.release()
+
+
+# 客户端
+if __name__ == '__main__':
+    bankQueue = LinkBankQueue()
+    windowcount = 2
+    serviceWindows = [None] * windowcount
+    threadList = [None] * windowcount
+    for i in range(windowcount):
+        serviceWindows[i] = ServiceWindow()
+        serviceWindows[i].bankQueue = bankQueue
+        threadList[i] = threading.Thread(name=(i + 1), target=serviceWindows[i].service, args=())
+        threadList[i].start()
+    while True:
+        input('请点击触摸屏获取号码：')
+        callNumber = bankQueue.getCallNumber()
+        if bankQueue != None:
+            print('您的号码是：%d，您前面有 %d 位' % (callNumber, bankQueue.getLength()))
+            bankQueue.enqueue(callNumber)
+        else:
+            print('您的号码是：%d，您前面有 0 位' % (callNumber))
+
+
+
+
