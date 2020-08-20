@@ -1,0 +1,213 @@
+一、Git 工作流程
+	本章节我们将为大家介绍 Git 的工作流程。
+
+	一般工作流程如下：
+	克隆 Git 资源作为工作目录。
+	在克隆的资源上添加或修改文件。
+	如果其他人修改了，你可以更新资源。
+	在提交前查看修改。
+	提交修改。
+	在修改完成后，如果发现错误，可以撤回提交并再次修改并提交。
+
+
+二、基本概念：
+	工作区：就是你在电脑里能看到的目录。
+	暂存区：英文叫stage, 或index。一般存放在 ".git目录下" 下的index文件（.git/index）中，所以我们把暂存区有时也叫作索引（index）。
+	版本库：工作区有一个隐藏目录.git，这个不算工作区，而是Git的版本库。
+
+
+	图中左侧为工作区，右侧为版本库。在版本库中标记为 "index" 的区域是暂存区（stage, index），标记为 "master" 的是 master 分支所代表的目录树。
+	图中我们可以看出此时 "HEAD" 实际是指向 master 分支的一个"游标"。所以图示的命令中出现 HEAD 的地方可以用 master 来替换。
+	图中的 objects 标识的区域为 Git 的对象库，实际位于 ".git/objects" 目录下，里面包含了创建的各种对象及内容。
+	当对工作区修改（或新增）的文件执行 "git add" 命令时，暂存区的目录树被更新，同时工作区修改（或新增）的文件内容被写入到对象库中的一个新的对象中，而该对象的ID被记录在暂存区的文件索引中。
+	当执行提交操作（git commit）时，暂存区的目录树写到版本库（对象库）中，master 分支会做相应的更新。即 master 指向的目录树就是提交时暂存区的目录树。
+	当执行 "git reset HEAD" 命令时，暂存区的目录树会被重写，被 master 分支指向的目录树所替换，但是工作区不受影响。
+	当执行 "git rm --cached <file>" 命令时，会直接从暂存区删除文件，工作区则不做出改变。
+	当执行 "git checkout ." 或者 "git checkout -- <file>" 命令时，会用暂存区全部或指定的文件替换工作区的文件。这个操作很危险，会清除工作区中未添加到暂存区的改动。
+	当执行 "git checkout HEAD ." 或者 "git checkout HEAD <file>" 命令时，会用 HEAD 指向的 master 分支中的全部或者部分文件替换暂存区和以及工作区中的文件。这个命令也是极具危险性的，因为不但会清除工作区中未提交的改动，也会清除暂存区中未提交的改动。
+
+
+
+
+三、基本操作；
+	1、git init
+		用 git init 在目录中创建新的 Git 仓库。 你可以在任何时候、任何目录中这么做，完全是本地化的。
+		示例：
+			$ mkdir runoob
+			$ cd runoob/
+			$ git init
+	2、git clone
+		使用 git clone 拷贝一个 Git 仓库到本地，让自己能够查看该项目，或者进行修改。
+		克隆完成后，在当前目录下会生成一个项目的目录：
+	3、git add 命令可将该文件添加到缓存（.表示所有文件）
+		示例：
+			git add README hello.php 
+			git add . 
+	4、git status 命令用于查看项目的当前状态。（加 -s 参数，以获得简短的结果输出。如果没加该参数会详细输出内容）
+		示例：
+			git status -s
+			结果：
+				A  README
+				A  hello.php
+	5、git diff  执行 git diff 来查看执行 git status 的结果的详细信息。
+		尚未缓存的改动：git diff
+		查看已缓存的改动： git diff --cached
+		查看已缓存的与未缓存的所有改动：git diff HEAD
+		显示摘要而非整个 diff：git diff --stat
+	6、git commit  使用 git add 命令将想要快照的内容写入缓存区， 而执行 git commit 将缓存区内容添加到仓库中。
+		我们使用 -m 选项以在命令行中提供提交注释。
+		示例：
+			git commit -m '第一次版本提交'
+			如果你觉得 git add 提交缓存的流程太过繁琐，Git 也允许你用 -a 选项跳过这一步。命令格式如下：git commit -am '修改 hello.php 文件'
+	7、git reset HEAD  该命令用于取消已缓存的内容。
+		示例：git reset HEAD hello.php 
+	
+	8、git rm 如果只是简单地从工作目录中手工删除文件，运行 git status 时就会在 Changes not staged for commit 的提示。
+			要从 Git 中移除某个文件，就必须要从已跟踪文件清单中移除，然后提交。可以用以下命令完成此项工作：git rm <file>
+			如果删除之前修改过并且已经放到暂存区域的话，则必须要用强制删除选项 -f ：git rm -f <file>
+			如果把文件从暂存区域移除，但仍然希望保留在当前工作目录中，换句话说，仅是从跟踪清单中删除，使用 --cached 选项即可：git rm --cached <file>
+			可以递归删除，即如果后面跟的是一个目录做为参数，则会递归删除整个目录中的所有子目录和文件：git rm –r * 
+	
+	9、git mv 命令用于移动或重命名一个文件、目录、软连接。git mv README  README.md
+	
+	10、git branch
+		没有参数时，git branch 会列出你在本地的分支，如：
+			$ git branch
+			* master
+		如果我们要手动创建一个分支。执行 git branch (branchname) 即可：
+			$ git branch testing
+		删除分支命令：git branch -d (branchname)
+
+	11、git checkout 
+		我们用 git checkout (branch) 切换到我们要修改的分支。如：git checkout testing
+		我们也可以使用 git checkout -b (branchname) 命令来创建新分支并立即切换到该分支下：
+			$ git checkout -b newtest
+			Switched to a new branch 'newtest'
+		
+	
+	
+	
+	12、git merge 
+		在master 分支下执行git merge newtest 就可以实现将 newtest 分支合并到主分支去
+		合并冲突：合并并不仅仅是简单的文件添加、移除的操作，Git 也会合并修改。
+			如果在两个分支中对同一个文件进行修改，再将一个分支合并到另一个分支，一个合并冲突就出现了，接下来我们需要手动去修改它。
+			$ git merge change_site
+			Auto-merging runoob.php
+			CONFLICT (content): Merge conflict in runoob.php
+			Automatic merge failed; fix conflicts and then commit the result.
+
+			$ cat runoob.php     # 代开文件，看到冲突内容
+			<?php
+			<<<<<<< HEAD
+			echo 1;
+			=======
+			echo 'runoob';
+			>>>>>>> change_site
+			?>
+			
+			冲突解决过程：
+			冲突文件的格式基本如下
+			<<<<<<< HEAD到=======是在当前分支合并之前的文件内容
+			=======到>>>>>>> psr/psr-02是在其它分支下修改的内容
+			需要在这个两个版本中选择一个，然后把标记符号也要一起删除
+			
+			
+			我们可以用 git add 要告诉 Git 文件冲突已经解决
+			$ git status -s
+			UU runoob.php
+			$ git add runoob.php
+			$ git status -s
+			M  runoob.php
+			$ git commit
+			[master 88afe0e] Merge branch 'change_site'
+			现在我们成功解决了合并中的冲突，并提交了结果。
+		
+		use "git merge --abort" to abort the merge（中止merge）
+		
+	13、git log 在使用 Git 提交了若干更新之后，又或者克隆了某个项目，想回顾下提交历史，我们可以使用 git log 命令查看	
+			我们可以用 --oneline 选项来查看历史记录的简洁的版本。
+			我们还可以用 --graph 选项，查看历史中什么时候出现了分支、合并。以下为相同的命令，开启了拓扑图选项：
+		
+	14、git tag -a <tagname> -m "runoob.com标签" 	如果你达到一个重要的阶段，并希望永远记住那个特别的提交快照，你可以使用 git tag 给它打上标签。
+			比如说，我们想为我们的 runoob 项目发布一个"1.0"版本。 我们可以用 git tag -a v1.0 命令给最新一次提交打上（HEAD）"v1.0"的标签。
+			-a 选项意为"创建一个带注解的标签"。 不用 -a 选项也可以执行的，但它不会记录这标签是啥时候打的，谁打的，也不会让你添加个标签的注解。 我推荐一直创建带注解的标签。
+			当你执行 git tag -a 命令时，Git 会打开你的编辑器，让你写一句标签注解，就像你给提交写注解一样。
+			现在，注意当我们执行 git log --decorate 时，我们可以看到我们的标签了
+			如果我们要查看所有标签可以使用以下命令：
+				$ git tag
+
+	15、git pull  （$ git pull origin release）
+		pull = fetch + merge
+		这个式子也就是说，pull其实是两步合并在一起的操作。
+		git fetch [远程仓库别名][远程分支名]
+		fetch 操作没有改变工作区的文件，只是将远程库的文件下载下来。
+		之后再git merge [远程仓库别名]/[远程分支名] 将文件拉取下来合并
+		pull分两步进行的好处：可以将文件确认好之后，再合并
+		当然也可以直接 git pull [远程仓库别名] [分支名] 将文件拉取下来合并。
+		git pull origin release 表示把远程分支release拉取并合并到本地的当前分支
+
+	
+	
+	
+	16、git push（将本地的仓推送到远程仓）	git push origin feature-MRsetting 将本地feature-MRsetting分支推送到远程feature-MRsetting分支
+	！！！！注意，不要用冒号，比较危险
+		git push命令用于将本地分支的更新，推送到远程主机。它的格式与git pull命令相仿。
+		$ git push <远程主机名> <本地分支名>:<远程分支名>
+		注意：这里的冒号:前后是必须没有空格的。
+		注意，分支推送顺序的写法是<来源地>:<目的地>，所以git pull是<远程分支>:<本地分支>，而git push是<本地分支>:<远程分支>。
+		如果省略远程分支名，则表示将本地分支推送与之存在"追踪关系"的远程分支（通常两者同名），如果该远程分支不存在，则会被新建。
+		$ git push origin master
+		上面命令表示，将本地的master分支推送到origin主机的master分支。如果后者不存在，则会被新建。
+		如果省略本地分支名，则表示删除指定的远程分支，因为这等同于推送一个空的本地分支到远程分支。
+		$ git push origin :master
+		# 等同于
+		$ git push origin --delete master
+		上面命令表示删除origin主机的master分支。
+		如果当前分支与远程分支之间存在追踪关系，则本地分支和远程分支都可以省略。
+		$ git push origin
+		上面命令表示，将当前分支推送到origin主机的对应分支。
+		如果当前分支只有一个追踪分支，那么主机名都可以省略。
+		$ git push
+		如果当前分支与多个主机存在追踪关系，则可以使用-u选项指定一个默认主机，这样后面就可以不加任何参数使用git push。
+		$ git push -u origin master
+		上面命令将本地的master分支推送到origin主机，同时指定origin为默认主机，后面就可以不加任何参数使用git push了。	
+
+	
+
+
+
+四、高端操作
+	1、远程分支版本回退：	
+		第一步：将本地的分支reset成老版本
+			w50014330@W50014330 MINGW64 /d/java_project/ProjectSvr (release)
+			$ git reset --hard ba250249
+			HEAD is now at ba25024 merge "feature-RR2020080400251" into "release" 添加策略列表/详情查询、讨
+			论列表/详情查询接口。vision单号：RR2020080400251
+		第二步：push到远程分支
+			w50014330@W50014330 MINGW64 /d/java_project/ProjectSvr (release)
+			$ git push origin release -f
+	2、第二次commit不新建message，而是在第一次的基础上修改
+		git add .
+		git commit --amend  //关键就是这句，执行后会出现类似vim的编辑器，第一行是上一次的message，可以直接键入i后进行修改，然后键入:wq保存退出
+		git push origin -f
+	
+	3、git文件怎么撤销修改
+		本地仓库修改过，但是还没有使用add提交的文件撤销修改
+		git checkout -- <文件名>
+		git restore <文件名>
+		放弃本地多个文件的修改
+		git checkout .
+		git restore .
+		文件已经add过了从工作区到暂存区了,怎么在回退到工作区中
+		git reset HEAD -- . 回退所有的
+		git reset HEAD -- <文件名>
+		git restore --staged <文件名>
+		git restore --staged . 回退所有的文件
+		git restore--staged *.js 所有暂存区的js文件回退
+		文件已经commit过后怎么回退
+		git restore -s HEAD~1 . 回退到上一个commit版本这次的代码全消失
+		git restore -s 91410eb9 . 指定明确的commit id 然后回退
+		git reset --soft HEAD^ 撤销本次的commit 回退到暂存区
+		commit之后发现注释写错了修改注释
+		git commit --amend 此时会进入vim编辑器 修改后保存即可
+			
