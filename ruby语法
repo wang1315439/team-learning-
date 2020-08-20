@@ -1,0 +1,866 @@
+零、
+	1、tap 
+		我们构建一个方法想返回一个 String / Array / Hash 之类结果，一般的做法是先定义一个变量，结果把运算结果赋值给这个变量，接着返回变量，
+		用 tap 一步搞定，其实就是源码意思的实现
+		[].tap {|i| i << "abc"}
+		''.tap {|i| i << do_some_thing }
+
+	2、在Ruby中有很多方法是以?和!号结尾的
+		“？”被用于标示谓词，即返回Boolean直的方法，如Array.empty?(判断数组中元素是否为空)
+		“！”出现在方法名尾部的感叹号表明使用该方法是需要多加小心。许多Ruby的核心类都定义了
+		成对的方法，它们具有同样的名称，只是结尾相差一个“！”,通常情况下，不带感叹号的方法返
+		调用该方法的一个拷贝，二带感叹号的方法则是一个可变方法，该方法会修改原来的对象，如Array
+		类中的sort和sort!
+
+	3、ruby中的break作用 中断代码块 while 、utils循环，如果break后面有参数的话，则返回该参数。
+		和return区别：return 退出函数break 退出循环体
+
+	4、ruby中的include和extend都用于在类中中引入module，但是这两种方式是有区别的。
+		简单的说
+		1）使用include引入module之后，module中的方法会成为一个类的实例方法。
+		2）通过extend引入的module的方法则成为类的静态方法（类方法）。
+		一个更详细的解释：
+		include主要用来将一个模块插入（mix）到一个类或者其它模块。
+		extend 用来在一个对象（object，或者说是instance）中引入一个模块，这个类从
+		直接 include <module name>即可
+
+		2.在类定义中引入模块，使模块中的方法成为类的类方法
+		这种情况也是比较常见的
+		直接 extend <module name>即可
+
+		3.在类定义中引入模块，既希望引入实例方法，也希望引入类方法
+		这个时候需要使用 include,
+		但是在模块中对类方法的定义有不同，定义出现在 方法
+		def self.included(c) ... end 中
+	
+	5、validates验证
+		validates验证机制是rails自带的，虽然存在局限性，但用起来还是比我们自己写验证要简单许多，下面就简单学习一下吧
+		（1）用validates对User模型的name属性进行存在性验证：
+		打开app/models/user.rb，添加如下代码
+
+		class User < ActiveRecord::Base
+		  validates :name, presence: true
+		end
+
+		validates 只不过是一个方法，也可写成
+
+		class User < ActiveRecord::Base
+		  validates(:name, presence: true)
+		end
+
+		（2）对name属性进行长度验证：
+
+		class User < ActiveRecord::Base
+		  validates :name,  presence: true, length: { maximum: 50 }
+		end
+
+		（3）对User模型的email属性进行格式性验证：
+		使用正则表达式验证 Email 格式
+
+		VALID_EMAIL_REGEX = /\A[\w+\-.]+@[a-z\d\-.]+\.[a-z]+\z/i
+		validates :email, presence: true, format: { with: VALID_EMAIL_REGEX }
+
+		我们把这个正则表达式定义为常量 VALID_EMAIL_REGEX，Ruby 中的常量都是以大写字母开头的。
+		使用上面的代码可以确保只有匹配这个正则表达式的 Email 地址才是合法的。（因为 VALID_EMAIL_REGEX 以大写字母开头，是个常量，所以其值是不能改变的。）
+		（4）验证 Email 地址的唯一性：
+		validates :email, presence: true, format: { with: VALID_EMAIL_REGEX }, uniqueness: true  
+
+	6、alias_attribute(new_name, old_name)-----取别名
+		示例：
+			class user < ActiveRecord::Base
+			   has_many :likings, dependent: :destroy
+			   alias_attribute :likes, :likings
+			end
+			user = current_user
+			user.likes = user.likings
+
+	7、scope可以对class指定一些sql查询条件,可以作为method使用,并且可以在关系调用时使用该method.
+		方法:只要在相应的 Model 文件中 加入 scope :scopename, -> { order("created_at DESC")}
+		可以使用Classname.unscoped.all,屏蔽scope
+		scope可以作为method调用,可以和其他scope,组成chain,还可以和其他scope组成条件查询组合相当于AND
+		scope可以和where查询语句组合使用
+		# 可以链式调用的：
+		class User < ActiveRecord::Base
+		  scope :old, -> { where('age > 60') }
+		  scope :heavy, -> { where('weight > 200') }
+		end
+		#链式调用可以执行 User.old.heavy
+
+		# 不能链式调用的：
+		class User < ActiveRecord::Base
+		  def User.old
+			where('age > ?', 80)
+		  end
+
+		  def User.heavy
+			where('weight > ?', 200)
+		  end
+		end
+		#这种方式下 old 和 heavy 可以单独工作，但不能执行 User.old.heavy
+
+	8、after_save和after_create是模型中常用的回掉方法！
+		after_save是在数据insert和update时都会触发，
+		after_create只有在insert时触发。
+
+	9、Ruby中的冒号
+		1) abc:
+		2) :xyz
+		3) abc::xyz
+		4) abc: :xyz
+		5) abc: xyz
+		6) :abc => xyz
+
+		1) abc: 不能单独使用
+
+		2) :xyz symbol变量,与string类型用法相同,但比string节省存储空间
+
+		:xyz.class => Symbol
+
+		3) abc::xyz 代表命名空间,可有用在module和class上
+
+		Example code:
+
+		module ABC
+
+		  class Xyz
+
+		    def initialize
+
+		      @size = 400
+
+		    end
+
+		   end
+
+		end
+
+		x = ABC::Xyz.new
+
+		4) abc: :xyz #hash中的key和value都是symbol时,可以这么写,等同于 hash={:abc=>:xyz}.
+
+		hash = {abc: :xyz} 
+
+		5) abc: xyz #hash中key是symbol, value是字符串 等同于hash={:abc=>xyz}
+
+		xyz = "just a test"
+
+		hash = {abc: xyz} 
+
+		6) :abc => xyz # 同上
+
+		xyz = "just a test"
+
+		hash = {:abc => xyz} 
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+一、ruby类和对象
+	1、在 Ruby 中定义类
+		为了使用 Ruby 实现面向对象编程，您需要先学习如何在 Ruby 中创建对象和类。
+		在 Ruby 中，类总是以关键字 class 开始，后跟类的名称。类名的首字母应该大写。类 Customer 如下所示：
+		class Customer
+		end
+
+
+	2、Ruby 类中的变量
+		Ruby 提供了五种类型的变量：
+		局部变量：局部变量是在方法中定义的变量。局部变量在方法外是不可用的。在后续的章节中，您将看到有关方法的更多细节。局部变量以小写字母或 _ 开始。
+		实例变量：实例变量可以跨任何特定的实例或对象中的方法使用。这意味着，实例变量可以从对象到对象的改变。实例变量在变量名之前放置符号（@）。
+		类变量：类变量可以跨不同的对象使用。类变量属于类，且是类的一个属性。类变量在变量名之前放置符号（@@）。
+		全局变量：类变量不能跨类使用。如果您想要有一个可以跨类使用的变量，您需要定义全局变量。全局变量总是以美元符号（$）开始。
+		常量：以大写字母开头。定义在类或模块内的常量可以从类或模块的内部访问，定义在类或模块外的常量可以被全局访问。
+			常量不能定义在方法内。引用一个未初始化的常量会产生错误。对已经初始化的常量赋值会产生警告。
+
+
+
+
+	3、在 Ruby 中使用 new 方法创建对象
+		对象是类的实例。现在您将学习如何在 Ruby 中创建类的对象。在 Ruby 中，您可以使用类的方法 new 创建对象。
+
+		方法 new 是一种独特的方法，在 Ruby 库中预定义。new 方法属于类方法。
+
+		下面的实例创建了类 Customer 的两个对象 cust1 和 cust2：
+
+		cust1 = Customer. new
+		cust2 = Customer. new
+		在这里，cust1 和 cust2 是两个对象的名称。对象名称后跟着等号（=），等号后跟着类名，然后是点运算符和关键字 new。
+
+		自定义方法来创建 Ruby 对象
+		您可以给方法 new 传递参数，这些参数可用于初始化类变量。
+
+		当您想要声明带参数的 new 方法时，您需要在创建类的同时声明方法 initialize。
+
+		initialize 方法是一种特殊类型的方法，将在调用带参数的类的 new 方法时执行。
+
+		下面的实例创建了 initialize 方法：
+
+		实例
+		class Customer
+		   @@no_of_customers=0
+		   def initialize(id, name, addr)
+			  @cust_id=id
+			  @cust_name=name
+			  @cust_addr=addr
+		   end
+		end
+		在本实例中，您可以声明带有 id、name、addr 作为局部变量的 initialize方法。在这里，def 和 end 用于定义 Ruby 方法 initialize。在后续的章节中，您将学习有关方法的更多细节。
+
+		在 initialize 方法中，把这些局部变量的值传给实例变量 @cust_id、@cust_name 和 @cust_addr。在这里，局部变量的值是随着 new 方法进行传递的。
+
+		现在，您可以创建对象，如下所示：
+
+		cust1=Customer.new("1", "John", "Wisdom Apartments, Ludhiya")
+		cust2=Customer.new("2", "Poul", "New Empire road, Khandala")
+		Ruby 类中的成员函数
+		在 Ruby 中，函数被称为方法。类中的每个方法是以关键字 def 开始，后跟方法名。
+
+		方法名总是以小写字母开头。在 Ruby 中，您可以使用关键字 end 来结束一个方法。
+
+		下面的实例定义了一个 Ruby 方法：
+
+		class Sample
+		   def function
+			  statement 1
+			  statement 2
+		   end
+		end
+
+二、运算符
+	1、点运算符 "." 和双冒号运算符 "::"
+		你可以通过在方法名称前加上类或模块名称和 . 来调用类或模块中的方法。你可以使用类或模块名称和两个冒号 :: 来引用类或模块中的常量。
+		:: 是一元运算符，允许在类或模块内定义常量、实例方法和类方法，可以从类或模块外的任何地方进行访问。
+		请记住：在 Ruby 中，类和方法也可以被当作常量。
+		你只需要在表达式的常量名前加上 :: 前缀，即可返回适当的类或模块对象。
+		如果 :: 前的表达式为类或模块名称，则返回该类或模块内对应的常量值；如果 :: 前未没有前缀表达式，则返回主Object类中对应的常量值。 。
+		下面是两个实例：
+		MR_COUNT = 0        # 定义在主 Object 类上的常量
+		module Foo
+		  MR_COUNT = 0
+		  ::MR_COUNT = 1    # 设置全局计数为 1
+		  MR_COUNT = 2      # 设置局部计数为 2
+		end
+		puts MR_COUNT       # 这是全局常量
+		puts Foo::MR_COUNT  # 这是 "Foo" 的局部常量
+		第二个实例：
+
+		CONST = ' out there'
+		class Inside_one
+		   CONST = proc {' in there'}
+		   def where_is_my_CONST
+			  ::CONST + ' inside one'
+		   end
+		end
+		class Inside_two
+		   CONST = ' inside two'
+		   def where_is_my_CONST
+			  CONST
+		   end
+		end
+		puts Inside_one.new.where_is_my_CONST
+		puts Inside_two.new.where_is_my_CONST
+		puts Object::CONST + Inside_two::CONST
+		puts Inside_two::CONST + CONST
+		puts Inside_one::CONST
+		puts Inside_one::CONST.call + Inside_two::CONST
+
+三、注释
+	单行用#
+	多行用	=begin
+			这是一个多行注释。
+			可扩展至任意数量的行。
+			=end
+
+四、条件判断
+	1、if...else 语句
+		x=1
+		if x > 2
+		   puts "x 大于 2"
+		elsif x <= 2 and x!=0
+		   puts "x 是 1"
+		else
+		   puts "无法得知 x 的值"
+		end
+
+	2、if 修饰符，if修饰词组表示当 if 右边之条件成立时才执行 if 左边的式子。即如果 conditional 为真，则执行 code。
+		$debug=1
+		print "debug\n" if $debug
+		
+	3、unless 语句，unless式和 if式作用相反，即如果 conditional 为假，则执行 code。如果 conditional 为真，则执行 else 子句中指定的 code。
+		x=1
+		unless x>2
+		   puts "x 小于 2"
+		 else
+		  puts "x 大于 2"
+		end
+		
+	4、unless 修饰符，如果 conditional 为假，则执行 code。
+		$var = false
+		print "3 -- 这一行输出\n" unless $var
+		
+	5、case 语句，case先对一个 expression 进行匹配判断，然后根据匹配结果进行分支选择。
+		它使用 ===运算符比较 when 指定的 expression，若一致的话就执行 when 部分的内容。	
+		$age =  5
+		case $age
+		when 0 .. 2
+			puts "婴儿"
+		when 3 .. 6
+			puts "小孩"
+		when 7 .. 12
+			puts "child"
+		when 13 .. 18
+			puts "少年"
+		else
+			puts "其他年龄段的"
+		end
+		
+五、循环
+	1、while循环
+		$i = 0
+		$num = 5
+		while $i < $num  do
+		   puts("在循环语句中 i = #$i" )
+		   $i +=1
+		end
+		
+		或：
+		$i = 0
+		$num = 5
+		begin
+		   puts("在循环语句中 i = #$i" )
+		   $i +=1
+		end while $i < $num
+		
+		
+	2、until 语句
+		$i = 0
+		$num = 5
+		until $i > $num  do
+		   puts("在循环语句中 i = #$i" )
+		   $i +=1;
+		end
+		
+		或：
+		$i = 0
+		$num = 5
+		begin
+		   puts("在循环语句中 i = #$i" )
+		   $i +=1;
+		end until $i > $num
+				
+		
+	3、for循环
+		for i in 0..5
+			puts "局部变量的值为 #{i}"
+		end	
+		
+		等同于下面
+		(0..5).each do |i|
+		   puts "局部变量的值为 #{i}"
+		end
+		
+	4、break和next（类似于continue）	
+	
+	5、redo和热retry
+		for i in 0..5
+			if i < 2 then
+				puts "局部变量的值为 #{i}"
+				redo
+		    end
+		end
+		
+		
+		for i in 1..5
+			retry if  i > 2
+			puts "局部变量的值为 #{i}"
+		end
+		
+		
+六、方法
+	1、示例：
+		def test(a1="Ruby", a2="Perl")
+		   puts "编程语言为 #{a1}"
+		   puts "编程语言为 #{a2}"
+		end
+		test "C", "C++"
+		test
+		以上实例运行输出结果为：
+			编程语言为 C
+			编程语言为 C++
+			编程语言为 Ruby
+			编程语言为 Perl
+	2、从方法返回值
+		Ruby 中的每个方法默认都会返回一个值。这个返回的值是最后一个语句的值。例如：
+		实例
+		def test
+		   i = 100
+		   j = 10
+		   k = 0
+		end	
+		在调用这个方法时，将返回最后一个声明的变量 k。
+	3、return 语句。如果给出超过两个的表达式，包含这些值的数组将是返回值。如果未给出表达式，nil 将是返回值。
+		示例：
+		def test
+		   i = 100
+		   j = 200
+		   k = 300
+		return i, j, k
+		end
+		var = test
+		puts var
+	4、可变数量的参数
+		示例：
+		def sample (*test)
+		    puts "参数个数为 #{test.length}"
+		    for i in 0...test.length
+			   puts "参数值为 #{test[i]}"
+		    end
+		end
+		sample "Zara", "6", "F"
+		sample "Mac", "36", "M", "MCA"
+		
+		以上实例运行输出结果为：
+			参数个数为 3
+			参数值为 Zara
+			参数值为 6
+			参数值为 F
+			参数个数为 4
+			参数值为 Mac
+			参数值为 36
+			参数值为 M
+			参数值为 MCA
+		
+	5、类方法	
+		Ruby 提供了一种不用实例化即可访问方法的方式。让我们看看如何声明并访问类方法：
+		class Accounts
+		   def reading_charge
+		   end
+		   def Accounts.return_date
+		   end
+		end
+		我们已经知道方法 return_date 是如何声明的。它是通过在类名后跟着一个点号，点号后跟着方法名来声明的。您可以直接访问类方法，如下所示：
+		Accounts.return_date
+		如需访问该方法，您不需要创建类 Accounts 的对象。
+		
+	6、alias 语句
+		这个语句用于为方法或全局变量起别名。别名不能在方法主体内定义。
+		示例：
+			alias foo bar
+			alias $MATCH $&
+			在这里，我们已经为 bar 定义了别名为 foo，为 $& 定义了别名为 $MATCH。
+		
+	7、undef 语句	
+		这个语句用于取消方法定义。undef 不能出现在方法主体内。
+		通过使用 undef 和 alias，类的接口可以从父类独立修改，但请注意，在自身内部方法调用时，它可能会破坏程序。
+		实例:面的实例取消名为 bar的方法定义：
+		undef bar
+		
+		
+七、块
+	Ruby 块就是放在 do 和 end 之间的代码。这就是它的全部。那么它的魔法是什么呢？
+	1、有两种方式可实现块:
+	①嵌套在 do 和 end之间多行代码
+		# 多行块
+		ruby [1, 2, 3].each do |n|
+			puts "Number #{n}"
+		end
+	②被大括号包裹的一行代码
+		# 单行块
+		[1, 2, 3].each {|n| puts "Number #{n}"}
+	两种实现方式都是做一样的事情，如果块中的代码超过一行（这里不是指代码行数，而是显示上有换行），建议使用第一种，可读性更强。
+	上面的代码中，两个竖线中间的 n 是块的参数，值为每次遍历出来的数组值。运行结果如下:
+		Number 1
+		Number 2
+		Number 3
+	
+	您可以使用 yield 语句来调用块。
+	def my_method
+		puts "reached the top"
+		yield
+		puts "reached the bottom"
+	end
+
+	my_method do
+		puts "reached yield"
+	end
+
+	2、BEGIN 和 END 块
+		每个 Ruby 源文件可以声明当文件被加载时要运行的代码块（BEGIN 块），以及程序完成执行后要运行的代码块（END 块）。
+		示例：
+			BEGIN { 
+			  # BEGIN 代码块
+			  puts "BEGIN 代码块"
+			} 
+			 
+			END { 
+			  # END 代码块
+			  puts "END 代码块"
+			}
+			  # MAIN 代码块
+			puts "MAIN 代码块"
+			一个程序可以包含多个 BEGIN 和 END 块。BEGIN 块按照它们出现的顺序执行。END 块按照它们出现的相反顺序执行。当执行时，上面的程序输出以下结果：
+			BEGIN 代码块
+			MAIN 代码块
+			END 代码块
+		
+		
+八、模块。 
+		模块（Module）是一种把方法、类和常量组合在一起的方式。模块（Module）为您提供了两大好处。
+		模块提供了一个命名空间和避免名字冲突。
+		模块实现了 mixin 装置。
+		模块（Module）定义了一个命名空间，相当于一个沙盒，在里边您的方法和常量不会与其他地方的方法常量冲突。
+		模块类似与类，但有以下不同：
+		模块不能实例化
+		模块没有子类
+		模块只能被另一个模块定义		
+		模块常量命名与类常量命名类似，以大写字母开头。方法定义看起来也相似：模块方法定义与类方法定义类似。
+		通过类方法，您可以在类方法名称前面放置模块名称和一个点号来调用模块方法，您可以使用模块名称和两个冒号来引用一个常量。
+		
+		示例：
+			module Trig
+			   PI = 3.141592654
+			   def Trig.sin(x)
+			   # ..
+			   end
+			   def Trig.cos(x)
+			   # ..
+			   end
+			end
+		
+		
+	1、 require 语句
+		require 语句类似于 C 和 C++ 中的 include 语句以及 Java 中的 import 语句。
+		如果一个第三方的程序想要使用任何已定义的模块，则可以简单地使用 Ruby require 语句来加载模块文件：
+		示例：
+			$LOAD_PATH << '.'
+			require 'trig.rb'
+			require 'moral'
+			 
+			y = Trig.sin(Trig::PI/4)
+			wrongdoing = Moral.sin(Moral::VERY_BAD)
+		在这里，我们使用 $LOAD_PATH << '.' 让 Ruby 知道必须在当前目录中搜索被引用的文件。如果您不想使用 $LOAD_PATH，那么您可以使用 require_relative 来从一个相对目录引用文件。
+		注意：在这里，文件包含相同的函数名称。所以，这会在引用调用程序时导致代码模糊，但是模块避免了这种代码模糊，而且我们可以使用模块的名称调用适当的函数。
+	2、include 语句	
+		您可以在类中嵌入模块。为了在类中嵌入模块，您可以在类中使用 include 语句：
+		假设下面的模块写在 support.rb 文件中。
+		module Week
+		   FIRST_DAY = "Sunday"
+		   def Week.weeks_in_month
+			  puts "You have four weeks in a month"
+		   end
+		   def Week.weeks_in_year
+			  puts "You have 52 weeks in a year"
+		   end
+		end
+		
+		现在，您可以在类中引用该模块，如下所示：
+			#!/usr/bin/ruby
+			$LOAD_PATH << '.'
+			require "support"
+			 
+			class Decade
+			include Week
+			   no_of_yrs=10
+			   def no_of_months
+				  puts Week::FIRST_DAY
+				  number=10*12
+				  puts number
+			   end
+			end
+			d1=Decade.new
+			puts Week::FIRST_DAY
+			Week.weeks_in_month
+			Week.weeks_in_year
+			d1.no_of_months
+				
+	3、Ruby 中的 Mixins			
+		Ruby 不直接支持多重继承，但是 Ruby 的模块（Module）有另一个神奇的功能。它几乎消除了多重继承的需要，提供了一种名为 mixin 的装置。
+		Ruby 没有真正实现多重继承机制，而是采用成为mixin技术作为替代品。将模块include到类定义中，模块中的方法就mix进了类中。
+		示例：
+			module A
+			   def a1
+			   end
+			   def a2
+			   end
+			end
+			module B
+			   def b1
+			   end
+			   def b2
+			   end
+			end
+			 
+			class Sample
+			include A
+			include B
+			   def s1
+			   end
+			end
+			 
+			samp=Sample.new
+			samp.a1
+			samp.a2
+			samp.b1
+			samp.b2
+			samp.s1
+		模块 A 由方法 a1 和 a2 组成。
+		模块 B 由方法 b1 和 b2 组成。
+		类 Sample 包含了模块 A 和 B。
+		类 Sample 可以访问所有四个方法，即 a1、a2、b1 和 b2。
+		因此，您可以看到类 Sample 继承了两个模块，您可以说类 Sample 使用了多重继承或 mixin 。
+		
+九、字符串（String）。Ruby 字符串分为单引号字符串（'）和双引号字符串（"），区别在于双引号字符串能够支持更多的转义字符。
+	如果您需要在单引号字符串内使用单引号字符，那么需要在单引号字符串使用反斜杠(\)，这样 Ruby 解释器就不会认为这个单引号字符是字符串的终止符号：
+	'Won\'t you read O\'Reilly\'s book?'
+	双引号字符串
+	在双引号字符串中我们可以使用 #{} 井号和大括号来计算表达式的值：字符串中嵌入变量：
+	实例：
+		#!/usr/bin/ruby
+		# -*- coding: UTF-8 -*-
+		name1 = "Joe"
+		name2 = "Mary"
+		puts "你好 #{name1},  #{name2} 在哪?"
+
+	以上实例输出运行输出结果为：
+		你好 Joe,  Mary 在哪?
+
+十、数组（Array）
+	Ruby 数组是任何对象的有序整数索引集合。数组中的每个元素都与一个索引相关，并可通过索引进行获取。
+	数组的索引从 0 开始，这与 C 或 Java 中一样。一个负数的索相对于数组的末尾计数的，也就是说，索引为 -1 表示数组的最后一个元素，-2 表示数组中的倒数第二个元素，依此类推。
+	Ruby 数组可存储诸如 String、 Integer、 Fixnum、 Hash、 Symbol 等对象，甚至可以是其他 Array 对象。
+	Ruby 数组不需要指定大小，当向数组添加元素时，Ruby 数组会自动增长。
+	1、创建数组
+		有多种方式创建或初始化数组。一种方式是通过 new 类方法：
+		names = Array.new
+		您可以在创建数组的同时设置数组的大小：
+		names = Array.new(20)
+		数组 names 的大小或长度为 20 个元素。您可以使用 size 或 length 方法返回数组的大小：
+
+		您也可以使用带有 new 的块，每个元素使用块中的计算结果来填充：
+		实例
+		#!/usr/bin/ruby
+		 
+		nums = Array.new(10) { |e| e = e * 2 }
+		 
+		puts "#{nums}"
+
+		以上实例运行输出结果为：
+
+		[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+		数组还有另一种方法，[]，如下所示：
+
+		nums = Array.[](1, 2, 3, 4,5)
+		数组创建的另一种形式如下所示：
+
+		nums = Array[1, 2, 3, 4,5]
+		在 Ruby 核心模块中可以有一个只接收单个参数的 Array 方法，该方法使用一个范围作为参数来创建一个数字数组：
+
+		实例
+		#!/usr/bin/ruby
+		 
+		digits = Array(0..9)
+		 
+		puts "#{digits}"
+		以上实例运行输出结果为：
+
+		[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+	2、数组内建方法
+		略
+
+
+	3、数组 pack 指令
+		略	
+
+十一、 哈希（Hash）
+	哈希（Hash）是类似 "key" => "value" 这样的键值对集合。Hash 的索引（或者叫"键"）几乎可以是任何对象。
+	1、创建哈希
+		与数组一样，有各种不同的方式来创建哈希。您可以通过 new 类方法创建一个空的哈希：
+		months = Hash.new
+		您也可以使用 new 创建带有默认值的哈希，不带默认值的哈希是 nil：
+		months = Hash.new( "month" )	 
+		或
+		months = Hash.new "month"
+		当您访问带有默认值的哈希中的任意键时，如果键或值不存在，访问哈希将返回默认值：
+
+		示例：
+			months = Hash.new( "month" )
+			months = {"1" => "January", "2" => "February"}
+			keys = months.keys		 
+			puts "#{keys}"
+
+		以上实例运行输出结果为：
+			["1", "2"]
+
+	2、内建方法
+		略
+
+十二、日期 & 时间（Date & Time）
+	Time 类在 Ruby 中用于表示日期和时间。它是基于操作系统提供的系统日期和时间之上。
+	略
+
+
+十三、范围（Range）
+	1、范围的第一个也是最常见的用途是表达序列。序列有一个起点、一个终点和一个在序列产生连续值的方式。
+	Ruby 使用 ''..'' 和 ''...'' 范围运算符创建这些序列。两点形式创建一个包含指定的最高值的范围，三点形式创建一个不包含指定的最高值的范围。
+		(1..5)        #==> 1, 2, 3, 4, 5
+		(1...5)       #==> 1, 2, 3, 4
+		('a'..'d')    #==> 'a', 'b', 'c', 'd'
+	
+	范围实现了让您可以遍历它们的方法，您可以通过多种方式检查它们的内容：
+	实例：
+	#!/usr/bin/ruby
+	# -*- coding: UTF-8 -*-
+	 
+	# 指定范围
+	digits = 0..9
+	puts digits.include?(5)
+	ret = digits.min
+	puts "最小值为 #{ret}"
+	ret = digits.max
+	puts "最大值为 #{ret}"
+	ret = digits.reject {|i| i < 5 }
+	puts "不符合条件的有 #{ret}"
+	digits.each do |digit|
+	   puts "在循环中 #{digit}"
+	end
+
+	2、范围也可以用作条件表达式。例如，下面的代码片段从标准输入打印行，其中每个集合的第一行包含单词 start，最后一行包含单词 end.：
+		while gets
+			print if /start/../end/
+		end
+		范围可以用在 case 语句中：
+
+		实例
+		#!/usr/bin/ruby
+		# -*- coding: UTF-8 -*-
+		 
+		score = 70
+		 
+		result = case score
+		when 0..40
+			"糟糕的分数"
+		when 41..60
+			"快要及格"
+		when 61..70
+			"及格分数"
+		when 71..100
+			   "良好分数"
+		else
+			"错误的分数"
+		end
+		 
+		puts result
+
+
+
+	3、范围的最后一个用途是间隔检测：检查指定值是否在指定的范围内。需要使用 === 相等运算符来完成计算。
+		示例：
+			if ((1..10) === 5)
+				puts "5 在 (1..10)"
+			end
+			 
+			if (('a'..'j') === 'c')
+				puts "c 在 ('a'..'j')"
+			end
+			 
+			if (('a'..'j') === 'z')
+				puts "z 在 ('a'..'j')"
+			end
+		以上实例运行输出结果为：
+			5 在 (1..10)
+			c 在 ('a'..'j')
+				
+
+十四、 迭代器
+	迭代器是集合支持的方法。存储一组数据成员的对象称为集合。在 Ruby 中，数组(Array)和哈希(Hash)可以称之为集合。
+迭代器返回集合的所有元素，一个接着一个。在这里我们将讨论两种迭代器，each 和 collect。
+	1、each 迭代器。
+		each 迭代器返回数组或哈希的所有元素。
+		语法：
+		collection.each do |variable|
+		   code
+		end
+		为集合中的每个元素执行 code。在这里，集合可以是数组或哈希。
+
+		实例：
+			ary = [1,2,3,4,5]
+			ary.each do |i|
+			   puts i
+			end
+		以上实例运行输出结果为：
+			1
+			2
+			3
+			4
+			5
+
+	2、collect 迭代器。
+		collect 迭代器返回集合的所有元素。
+		语法：
+		collection = collection.collect
+		collect 方法不需要总是与一个块关联。collect 方法返回整个集合，不管它是数组或者是哈希。
+		示例：
+			a = [1,2,3,4,5]
+			b = Array.new
+			b = a.collect{ |x|x }
+			puts b
+
+		以上实例运行输出结果为：
+			1
+			2
+			3
+			4
+			5
+
+十五、文件的输入与输出
+	类 IO 提供了所有基础的方法，比如 read、 write、 gets、 puts、 readline、 getc 和 printf。
+	
+
+
+十六、File 类和方法
+	File 表示一个连接到普通文件的 stdio 对象。open 为普通文件返回该类的一个实例。
+
+
+
+十七、Dir 类和方法
+	Dir 是一个表示用于给出操作系统中目录中的文件名的目录流。Dir 类也拥有与目录相关的操作，比如通配符文件名匹配、改变工作目录等。
+
+
+十八、异常
+	异常和执行总是被联系在一起。如果您打开一个不存在的文件，且没有恰当地处理这种情况，那么您的程序则被认为是低质量的。
+	如果异常发生，则程序停止。异常用于处理各种类型的错误，
+
+
+贰、高级
+
+一、面向对象
+
+
+
+
+二、正则表达式
+	
+
+
+
+
+
+
+
+
