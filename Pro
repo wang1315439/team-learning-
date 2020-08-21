@@ -1,0 +1,65 @@
+ProjectSvr
+项目启动注意事项
+ProjectSvr 添加配置文件，{{}}包裹的配置项需自行配置，配置值需找运维或项目负责人获取。(敏感信息不允许提交到代码仓库中)
+开发环境配置
+SCC加解密组件安装
+参考文档：
+
+安全加解密组件SCC使用详解
+公有云安全公共组件使用指导
+windows环境
+windows环境仅提供本地开发安装包SecComponent-dev-1.0.1-1.5.msi，《公有云安全公共组件使用指导》文末附件下载SecComponent-dev-1.0.1-1.5.zip
+Linux
+请参考文档安装
+
+web访问地址
+项目包说明
+POJO类命名规范以及存放包说明
+服务api接口response返回定义
+正常response接口状态码200，body直接是业务对象
+错误信息统一使用http的状态码表达
+错误信息返回格式
+服务命名规范
+api采用restful接口规范，单词使用下划线_分割。更加详细的接口规范请查看《华为云服务开放 API遵从性规范3.0》
+
+包名统一使用小写，点分隔符之前有且仅有一个自然语义的英语单词，但明统一使用单数形式，类名如果存在复数含义，类名可以使用复数；
+
+dao层命名规范:
+
+获取单个对象的方法用 get/find 做前缀，同时sql需要使用limit 1
+获取多个对象的方法用 list 做前缀，复数形式结尾如：listObjects
+获取统计值的方法用 count 做前缀
+插入的方法用 save/insert 做前缀
+删除的方法用 remove/delete 做前缀
+修改的方法用 update 做前缀
+返回boolean类型的使用is 做前缀
+controller层返回统一使用ResponseEntity<>，对象需要具体指定类型；如果一个接口根据不同条件会有不同类型的对象返回，可以使用ResponseEntity<?>
+
+mapper文件中对象统一在每一个
+
+日志脱敏的一些参考
+https://logging.apache.org/log4j/2.x/manual/extending.html
+MarkerFilter等过滤器都是控制的整个消息的打印情况
+https://blog.csdn.net/weixin_34270606/article/details/87942580
+https://www.twblogs.net/a/5c65548cbd9eee06ee22d6ba/zh-cn
+重写Gitlab
+迁移准则
+在用java重写gitlab的逻辑时，尽量兼容gitlab原始的设计模式和业务逻辑。
+
+迁移Java中的类尽量按照gitlab中的类命名，如果出现多个相同名字的类，可某些POJO类可以按照POJO处理方法加类后缀
+gitlab中继承ActiveRecord::Base的类属于领域模型，又直接持久化到数据库，可以加后缀DO，如MergeRequestDO；
+gitlab中属于领域模型，但是又没有数据库对应的表，同时不属于Controller层返回用的类，可以沿用原始命名，如Discussion及其子类；
+gitlab中主要做Controller层返回数据，可以按照POJO类处理，添加VO/DTO等后缀；
+从gitlab中迁移过来的包或者类，应该注明注解，以方便后续追溯gitlab源码
+每一个包都需要添加README.md文件（README需大写），并描述该包的来源以及用处。可以参考附录中的样例。
+每一个迁移过来的类必须添加说明，结构如下
+原gitlab类：<类文件相对路径>
+原gitlab类: gitlab-ce/plugins/isource/lib/plugin_api/entities.rb文件下的Discussion类
+附录
+包README.md文件样例
+# 包说明
+com.huawei.codehub.projectsvr.controller.model
+
+该包主要放gitlab以下位置的vo类：
+1. gitlab-ce/lib/api/entities.rb
+2. gitlab-ce/plugins/isource/lib/plugin_api/entities.rb
